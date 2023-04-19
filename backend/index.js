@@ -34,7 +34,7 @@ app.use(fileUpload({
 
 app.use(bodyParser.raw({
     type: 'application/octet-stream',
-    limit:'100mb',
+    limit:'1000000000000000mb',
 }));
 
 app.use(cors('http://localhost:3000/'))
@@ -43,14 +43,15 @@ app.use('/uploads', express.static('uploads'));
 
 
 app.post('/upload', async (req, res, next) => {
-    const {name, CHUNK_SIZE, offset, currentChunkIndex, totalChunks} = req.query;
+    const {name, CHUNK_SIZE, size, offset, currentChunkIndex, totalChunks} = req.query;
     console.log(name, CHUNK_SIZE, offset, currentChunkIndex, totalChunks);
 
     const extension = name.split('.').pop();
 
     const data = req.body.toString().split(',')[1];
 
-    console.log(data.size)
+    console.log(typeof (parseInt(offset) + parseInt(CHUNK_SIZE)));
+
     const buffer = new Buffer(data, 'base64');
 
     const temperoryFileName = 'temp_'+md5(name+req.ip)+'.'+extension;
@@ -58,18 +59,20 @@ app.post('/upload', async (req, res, next) => {
     const isFirstChunk = parseInt(currentChunkIndex) === 0;
     const isLastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks)-1;
 
-    // if(isFirstChunk){
-        //Clear some space
-    //     await fs.unlinkSync('./uploads/'+temperoryFileName);
-    // }
+    if(isFirstChunk && fs.existsSync('./uploads/'+temperoryFileName)){
+        fs.unlinkSync('./uploads/'+temperoryFileName);
+    }
 
     //For all the Middle Chunks along with First and Last Chunk
     fs.appendFileSync('./uploads/'+temperoryFileName, buffer);
-    res.set('x-next-offset', parseInt(offset) + parseInt(CHUNK_SIZE))
+    const resOffset = parseInt(currentChunkIndex) * parseInt(CHUNK_SIZE);
+    res.set('x-next-offset', `${resOffset}`)
+    
     if(isLastChunk){
+
         //Rename the Temporary file and put it somewhere...
         const finalFileName = md5(Date.now()).substr(0,6)+'.'+extension;
-        await fs.renameSync('./uploads/'+temperoryFileName, './uploads/'+finalFileName);
+        fs.renameSync('./uploads/'+temperoryFileName, './uploads/'+finalFileName);
 
         res.status(200).json({
             finalFileName

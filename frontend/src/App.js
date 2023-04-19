@@ -9,22 +9,23 @@ function App() {
     const CHUNK_SIZE = 100 * 1024 *1024; // 100 MB
 
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
-    console.log(totalChunks)
+    // console.log(totalChunks)
 
     let offset = 0;
 
     const onSavePromiseRequest = new Promise(async (resolve, reject) => { 
       
       for(let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++){
-        const start = offset;
-        const end = Math.min(offset + CHUNK_SIZE, file.size);
+        let start = offset;
+        let end = Math.min(offset+CHUNK_SIZE, file.size);
 
-        console.log(start, end, offset)
+        // console.log(start, end, offset)
 
         let chunk = file.slice(start, end);
 
         const uploadChunk = async (e)=>{
           chunk = e.target.result;
+          console.log("Each Chunk Size: ",chunk.length/(1024 *1024))
           const params = new URLSearchParams();
           params.set('name', file.name);
           params.set('size', file.size);
@@ -44,15 +45,17 @@ function App() {
             }
             const chunkUploadRequest = new Request(URL, OPTIONS);
             const response = await fetch(chunkUploadRequest);
-  
+            
             if (response.status === 200) {
+              const json = await response.json();
+              console.log("Uploaded File Name: ",json.finalFileName);
               resolve(currentFile.uid)
-            } 
-            else {
-              offset = parseInt(response.headers['x-next-offset']);
-              console.log(offset)
             }
+
+            offset = parseInt(response.headers['x-next-offset']);
+            console.log("OffSet from the Response Headers...",offset)
           } catch (err) {
+            console.log("Fetch Failed: Rejecting the File Upload...",err);
             reject(currentFile.uid)
             return;
           }
