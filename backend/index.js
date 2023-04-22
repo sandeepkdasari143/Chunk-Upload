@@ -83,56 +83,56 @@ app.post('/upload', async (req, res, next) => {
     
 })
 
-app.post('/upload/sample', async (req,res)=>{
-    const data = req.files;
-    console.log(data)
-    const file = data.files;
-    const extension = file.name.split('.').pop();
+// app.post('/upload/sample', async (req,res)=>{
+//     const data = req.files;
+//     console.log(data)
+//     const file = data.files;
+//     const extension = file.name.split('.').pop();
 
-    console.log(file.name)
-    const temperoryFileName = 'temp_'+md5(file.name+req.ip)+'.'+extension;
-    console.log(temperoryFileName)
+//     console.log(file.name)
+//     const temperoryFileName = 'temp_'+md5(file.name+req.ip)+'.'+extension;
+//     console.log(temperoryFileName)
 
-    // fs.unlinkSync('./uploads/'+temperoryFileName);
-    // fs.appendFileSync('./uploads/'+temperoryFileName, buffer);
-    // let fileUploadFolder = "uploads";
+//     // fs.unlinkSync('./uploads/'+temperoryFileName);
+//     // fs.appendFileSync('./uploads/'+temperoryFileName, buffer);
+//     // let fileUploadFolder = "uploads";
     
-    const tempFileUploadDir = 'uploads';
+//     const tempFileUploadDir = 'uploads';
 
-    const fileUploadDir = path.join(__dirname, tempFileUploadDir, temperoryFileName);
-    file.mv(fileUploadDir, (error) => {
-        if(error){
-            res.status(500).json({
-                status: error,
-                message: error.message
-            })
-        }
-    });
+//     const fileUploadDir = path.join(__dirname, tempFileUploadDir, temperoryFileName);
+//     file.mv(fileUploadDir, (error) => {
+//         if(error){
+//             res.status(500).json({
+//                 status: error,
+//                 message: error.message
+//             })
+//         }
+//     });
 
-    res.status(200).json({
-        status: 'success',
-        message: "File uploaded successfully"
-    })
-})
+//     res.status(200).json({
+//         status: 'success',
+//         message: "File uploaded successfully"
+//     })
+// })
 
-app.post('/uploadinchunks', async (req, res) => {
-    const { chunk, offset, totalSize, fileName } = req.body;
+// app.post('/uploadinchunks', async (req, res) => {
+//     const { chunk, offset, totalSize, fileName } = req.body;
 
-    console.log(chunk, offset, totalSize, fileName)
+//     console.log(chunk, offset, totalSize, fileName)
 
-    const filePath = `./uploads/${fileName}`;
-    const writableStream = fs.createWriteStream(filePath, { flags: 'a' });
+//     const filePath = `./uploads/${fileName}`;
+//     const writableStream = fs.createWriteStream(filePath, { flags: 'a' });
 
-    writableStream.write(chunk);
+//     writableStream.write(chunk);
 
-    res.set('x-next-offset', parseInt(offset) + chunk.length);
+//     res.set('x-next-offset', parseInt(offset) + chunk.length);
 
-    if (parseInt(offset) + chunk.length >= parseInt(totalSize)) {
-        res.sendStatus(200);
-    } else {
-        res.sendStatus(206);
-    }
-})
+//     if (parseInt(offset) + chunk.length >= parseInt(totalSize)) {
+//         res.sendStatus(200);
+//     } else {
+//         res.sendStatus(206);
+//     }
+// })
 
 
 const PORT = 4001 || env.PORT
