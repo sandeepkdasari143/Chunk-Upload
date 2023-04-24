@@ -34,7 +34,7 @@ app.use(fileUpload({
 
 app.use(bodyParser.raw({
     type: 'application/octet-stream',
-    limit:'1000000000000000mb',
+    limit:'100mb',
 }));
 
 app.use(cors('http://localhost:3000/'))
@@ -43,19 +43,12 @@ app.use('/uploads', express.static('uploads'));
 
 
 app.post('/upload', async (req, res, next) => {
-    const {name, CHUNK_SIZE, size, offset, currentChunkIndex, totalChunks} = req.query;
-    console.log(name, CHUNK_SIZE, offset, currentChunkIndex, totalChunks);
-
+    const {name, currentChunkIndex, totalChunks} = req.query;
     const extension = name.split('.').pop();
-
     const data = req.body.toString().split(',')[1];
-
-    console.log(typeof (parseInt(offset) + parseInt(CHUNK_SIZE)));
-
     const buffer = new Buffer(data, 'base64');
-
     const temperoryFileName = 'temp_'+md5(name+req.ip)+'.'+extension;
-    
+
     const isFirstChunk = parseInt(currentChunkIndex) === 0;
     const isLastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks)-1;
 
@@ -65,17 +58,17 @@ app.post('/upload', async (req, res, next) => {
 
     //For all the Middle Chunks along with First and Last Chunk
     fs.appendFileSync('./uploads/'+temperoryFileName, buffer);
-    const resOffset = parseInt(currentChunkIndex) * parseInt(CHUNK_SIZE);
-    res.set('x-next-offset', `${resOffset}`)
+    // const resOffset = parseInt(currentChunkIndex) * parseInt(CHUNK_SIZE);
+    // res.set('x-next-offset', `${resOffset}`)
     
     if(isLastChunk){
-
         //Rename the Temporary file and put it somewhere...
-        const finalFileName = md5(Date.now()).substr(0,6)+'.'+extension;
-        fs.renameSync('./uploads/'+temperoryFileName, './uploads/'+finalFileName);
-
+        // const finalFileName = md5(Date.now()).substr(0,6)+'.'+extension;
+        fs.renameSync('./uploads/' + temperoryFileName, './uploads/'+name);
+        
+        // save that file which is there in ./uploads in Some Storage, it will give link, we will link it to the User
         res.status(200).json({
-            finalFileName
+            name
         });
     }else{
         res.json('ok')
